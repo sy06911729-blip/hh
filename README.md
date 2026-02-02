@@ -49,11 +49,12 @@ Le binaire sera disponible dans le dossier `dist/` (ex: `dist/video-downloader`)
 ## Générer un exécutable via GitHub Actions
 Vous pouvez produire automatiquement des exécutables via GitHub Actions (Windows/macOS/Linux).
 
-1. Créez un tag `vX.Y.Z` puis poussez-le:
+1. Créez une étiquette (tag) `vX.Y.Z` sur le dernier commit, puis poussez-la:
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
+Astuce: pour voir vos tags locaux, utilisez `git tag -l`.
 2. Téléchargez l'artefact généré dans l'onglet **Actions** de GitHub.
 
 ## Notes
