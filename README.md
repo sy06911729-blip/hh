@@ -26,6 +26,16 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### Sur Windows
+```powershell
+python main.py
+```
+
+### Sur macOS / Linux
+```bash
+python3 main.py
+```
+
 ## Notes
 - Assurez-vous que `ffmpeg` est installé pour les conversions si nécessaire.
 - Utilisez des URL valides compatibles avec `yt-dlp`.
