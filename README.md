@@ -36,6 +36,26 @@ python main.py
 python3 main.py
 ```
 
+## Créer un exécutable (Windows/macOS/Linux)
+Installez PyInstaller, puis lancez le script de build:
+
+```bash
+pip install pyinstaller
+python scripts/build_exe.py
+```
+
+Le binaire sera disponible dans le dossier `dist/` (ex: `dist/video-downloader`). 
+
+## Générer un exécutable via GitHub Actions
+Vous pouvez produire automatiquement des exécutables via GitHub Actions (Windows/macOS/Linux).
+
+1. Créez un tag `vX.Y.Z` puis poussez-le:
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+2. Téléchargez l'artefact généré dans l'onglet **Actions** de GitHub.
+
 ## Notes
 - Assurez-vous que `ffmpeg` est installé pour les conversions si nécessaire.
 - Utilisez des URL valides compatibles avec `yt-dlp`.
