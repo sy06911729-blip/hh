@@ -29,6 +29,23 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Build executable (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          python scripts/build_exe.py
+
+      - name: Install Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install innosetup -y
+
+      - name: Build installer (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python scripts/build_installer.py
+
+      - name: Upload artifact (Linux/macOS)
+        if: runner.os != 'Windows'
       - name: Build executable
         run: |
           python scripts/build_exe.py
@@ -39,3 +56,11 @@ jobs:
           name: video-downloader-${{ runner.os }}
           path: |
             dist/
+
+      - name: Upload installer (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-downloader-setup-${{ runner.os }}
+          path: |
+            dist/installer/*.exe
