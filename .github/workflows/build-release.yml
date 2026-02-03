@@ -46,6 +46,11 @@ jobs:
 
       - name: Upload artifact (Linux/macOS)
         if: runner.os != 'Windows'
+      - name: Build executable
+        run: |
+          python scripts/build_exe.py
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: video-downloader-${{ runner.os }}
