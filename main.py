@@ -20,7 +20,7 @@ class DownloadApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Video Downloader - IDM Style")
-        self.geometry("820x520")
+        self.geometry("880x620")
         self.resizable(False, False)
 
         self.url_var = tk.StringVar()
@@ -30,6 +30,8 @@ class DownloadApp(tk.Tk):
         self.format_var = tk.StringVar(value="best")
         self.limit_var = tk.StringVar(value="")
         self.playlist_var = tk.BooleanVar(value=False)
+        self.summary_var = tk.StringVar(value="0 en attente · 0 terminés · 0 erreurs")
+        self.overall_progress_var = tk.DoubleVar(value=0.0)
 
         self.tasks: list[DownloadTask] = []
         self._worker_thread: threading.Thread | None = None
@@ -107,7 +109,7 @@ class DownloadApp(tk.Tk):
         self.table.heading("url", text="URL")
         self.table.heading("status", text="Statut")
         self.table.heading("progress", text="Progression")
-        self.table.column("url", width=480)
+        self.table.column("url", width=500)
         self.table.column("status", width=120)
         self.table.column("progress", width=120)
         self.table.pack(side="left", fill="both")
@@ -115,6 +117,17 @@ class DownloadApp(tk.Tk):
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.table.yview)
         self.table.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
+
+        summary_frame = ttk.Frame(self)
+        summary_frame.pack(fill="x", padx=12, pady=4)
+        ttk.Label(summary_frame, textvariable=self.summary_var).pack(anchor="w")
+
+        progress_frame = ttk.Frame(self)
+        progress_frame.pack(fill="x", padx=12, pady=4)
+        self.overall_progress = ttk.Progressbar(
+            progress_frame, variable=self.overall_progress_var, maximum=100
+        )
+        self.overall_progress.pack(fill="x")
 
         controls = ttk.Frame(self)
         controls.pack(fill="x", padx=12, pady=6)
@@ -161,6 +174,7 @@ class DownloadApp(tk.Tk):
         self.tasks.append(task)
         self.table.insert("", "end", values=(task.url, task.status, "0%"))
         self.url_var.set("")
+        self._refresh_summary()
 
     def _remove_selected(self) -> None:
         selected = self.table.selection()
@@ -171,11 +185,14 @@ class DownloadApp(tk.Tk):
             self.table.delete(item)
             if index < len(self.tasks):
                 self.tasks.pop(index)
+        self._refresh_summary()
 
     def _clear_queue(self) -> None:
         self.table.delete(*self.table.get_children())
         self.tasks.clear()
         self.status_var.set("Prêt")
+        self._refresh_summary()
+        self.overall_progress_var.set(0.0)
 
     def _start_queue(self) -> None:
         if self._worker_thread and self._worker_thread.is_alive():
@@ -204,12 +221,28 @@ class DownloadApp(tk.Tk):
             self.status_var.set("Téléchargements terminés")
         else:
             self.status_var.set("Téléchargement interrompu")
+        self._refresh_summary()
 
     def _update_table(self, index: int, status: str, progress: float) -> None:
         if index >= len(self.table.get_children()):
             return
+        self.tasks[index].status = status
+        self.tasks[index].progress = progress
         item_id = self.table.get_children()[index]
         self.table.item(item_id, values=(self.tasks[index].url, status, f"{progress:.0f}%"))
+        self._refresh_summary()
+
+    def _refresh_summary(self) -> None:
+        total = len(self.tasks)
+        done = sum(1 for task in self.tasks if task.status == "Terminé")
+        errors = sum(1 for task in self.tasks if task.status == "Erreur")
+        pending = total - done - errors
+        self.summary_var.set(f"{pending} en attente · {done} terminés · {errors} erreurs")
+        if total:
+            average = sum(task.progress for task in self.tasks) / total
+            self.overall_progress_var.set(average)
+        else:
+            self.overall_progress_var.set(0.0)
 
     def _download_task(self, task: DownloadTask, index: int) -> None:
         output_dir = self.output_var.get().strip()
@@ -223,10 +256,8 @@ class DownloadApp(tk.Tk):
                 total = data.get("total_bytes") or data.get("total_bytes_estimate")
                 downloaded = data.get("downloaded_bytes", 0)
                 percent = (downloaded / total * 100) if total else 0
-                task.progress = percent
                 self.after(0, self._update_table, index, "En cours", percent)
             elif data.get("status") == "finished":
-                task.progress = 100
                 self.after(0, self._update_table, index, "Terminé", 100)
 
         ydl_opts = {
@@ -242,8 +273,7 @@ class DownloadApp(tk.Tk):
             with YoutubeDL(ydl_opts) as ydl:
                 ydl.download([task.url])
         except Exception as exc:  # noqa: BLE001
-            task.status = "Erreur"
-            self.after(0, self._update_table, index, f"Erreur", task.progress)
+            self.after(0, self._update_table, index, "Erreur", task.progress)
             self.after(0, self.status_var.set, f"Erreur: {exc}")
 
     @staticmethod

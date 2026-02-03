@@ -47,6 +47,13 @@ python scripts/build_exe.py
 Le binaire sera disponible dans le dossier `dist/` (ex: `dist/video-downloader`). 
 Sur Windows, l'exécutable inclut des métadonnées (nom, version, copyright).
 
+### Créer un installateur Windows (recommandé)
+```powershell
+pip install pyinstaller
+python scripts/build_installer.py
+```
+L'installateur `VideoDownloaderSetup.exe` sera généré dans `dist/installer/` et ne lance pas de terminal.
+
 ## Générer un exécutable via GitHub Actions
 Vous pouvez produire automatiquement des exécutables via GitHub Actions (Windows/macOS/Linux).
 
@@ -56,7 +63,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 Astuce: pour voir vos tags locaux, utilisez `git tag -l`.
-2. Téléchargez l'artefact généré dans l'onglet **Actions** de GitHub.
+2. Téléchargez l'artefact généré dans l'onglet **Actions** de GitHub (Windows: installateur `VideoDownloaderSetup.exe`).
 
 ## Notes
 - Assurez-vous que `ffmpeg` est installé pour les conversions si nécessaire.
